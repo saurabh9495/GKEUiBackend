@@ -1,18 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Sample UI</title>
-    <script>
-        function callAPI() {
-            fetch('http://backend-service:5000/api/data') // Direct cluster service call
-                .then(response => response.json())
-                .then(data => document.getElementById('output').innerText = JSON.stringify(data));
-        }        
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Data</title>
 </head>
 <body>
-    <h1>Sample UI</h1>
-    <button onclick="callAPI()">Call API</button>
-    <pre id="output"></pre>
+    <h1>API Data</h1>
+
+    <h2>Posts</h2>
+    <div id="posts"></div>
+
+    <h2>Comments</h2>
+    <div id="comments"></div>
+
+    <h2>Albums</h2>
+    <div id="albums"></div>
+
+    <script>
+        async function fetchData(route, elementId) {
+            try {
+                const response = await fetch(`http://10.92.0.27:5000/api/${route}`);
+                const data = await response.json();
+                document.getElementById(elementId).innerHTML = JSON.stringify(data, null, 2);
+            } catch (error) {
+                console.error(`Error fetching ${route}:`, error);
+            }
+        }
+
+        fetchData("posts", "posts");
+        fetchData("comments", "comments");
+        fetchData("albums", "albums");
+    </script>
 </body>
 </html>
