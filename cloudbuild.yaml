@@ -1,0 +1,19 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/celi12/ui-image:latest', './ui']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/celi12/backend-image:latest', './backend']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/celi12/ui-image:latest']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/celi12/backend-image:latest']
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args: ['apply', '-f', './ui/ui-deployment.yaml']
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args: ['apply', '-f', './ui/ui-service.yaml']
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args: ['apply', '-f', './backend/backend-deployment.yaml']
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args: ['apply', '-f', './backend/backend-service.yaml']
+options:
+  logging: CLOUD_LOGGING_ONLY
