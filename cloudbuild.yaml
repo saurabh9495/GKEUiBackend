@@ -1,8 +1,11 @@
 steps:
+  # Build Docker images
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'gcr.io/celi12/ui-image:latest', './ui']
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'gcr.io/celi12/backend-image:latest', './backend']
+
+  # Push images to Google Container Registry
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/celi12/ui-image:latest']
   - name: 'gcr.io/cloud-builders/docker'
@@ -16,27 +19,45 @@ steps:
       '--project', 'celi12'
     ]
 
-  # Deploy to GKE
+  # Deploy ConfigMaps for Envoy sidecar proxy
+  - name: 'gcr.io/cloud-builders/kubectl'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
+    args: ['apply', '-f', './backend/envoy-config-backend.yaml']
+
+  - name: 'gcr.io/cloud-builders/kubectl'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
+    args: ['apply', '-f', './ui/envoy-config-ui.yaml']
+
+  # Deploy backend with Envoy sidecar
+  - name: 'gcr.io/cloud-builders/kubectl'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
+    args: ['apply', '-f', './backend/backend-deployment.yaml']
+
+  # Deploy UI with Envoy sidecar
   - name: 'gcr.io/cloud-builders/kubectl'
     env:
       - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
       - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
     args: ['apply', '-f', './ui/ui-deployment.yaml']
+
+  # Deploy backend and UI services
   - name: 'gcr.io/cloud-builders/kubectl'
     env:
-    - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
-    - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
-    args: ['apply', '-f', './ui/ui-service.yaml']
-  - name: 'gcr.io/cloud-builders/kubectl'
-    env:
-    - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
-    - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
-    args: ['apply', '-f', './backend/backend-deployment.yaml']
-  - name: 'gcr.io/cloud-builders/kubectl'
-    env:
-    - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
-    - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
     args: ['apply', '-f', './backend/backend-service.yaml']
+
+  - name: 'gcr.io/cloud-builders/kubectl'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
+    args: ['apply', '-f', './ui/ui-service.yaml']
 
 options:
   logging: CLOUD_LOGGING_ONLY
