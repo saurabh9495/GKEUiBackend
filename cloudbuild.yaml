@@ -7,13 +7,36 @@ steps:
     args: ['push', 'gcr.io/celi12/ui-image:latest']
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/celi12/backend-image:latest']
+
+  # Authenticate and set the Kubernetes cluster
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: [
+      'container', 'clusters', 'get-credentials', 'cluster-1',
+      '--zone', 'us-central1-c', # Change to your cluster's zone
+      '--project', 'celi12'
+    ]
+
+  # Deploy to GKE
   - name: 'gcr.io/cloud-builders/kubectl'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
     args: ['apply', '-f', './ui/ui-deployment.yaml']
   - name: 'gcr.io/cloud-builders/kubectl'
+    env:
+    - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
+    - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
     args: ['apply', '-f', './ui/ui-service.yaml']
   - name: 'gcr.io/cloud-builders/kubectl'
+    env:
+    - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
+    - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
     args: ['apply', '-f', './backend/backend-deployment.yaml']
   - name: 'gcr.io/cloud-builders/kubectl'
+    env:
+    - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
+    - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
     args: ['apply', '-f', './backend/backend-service.yaml']
+
 options:
   logging: CLOUD_LOGGING_ONLY
