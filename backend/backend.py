@@ -1,7 +1,25 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
+
+@app.route("/")
+def get_home():
+    return jsonify({
+        "message": "Welcome to the API",
+        "version": "1.0",
+        "status": "running"
+    })
+    
+@app.route("/api/home")
+def get_api_home():
+    return jsonify({
+        "message": "Welcome to the API",
+        "version": "1.0",
+        "status": "running"
+    })
 
 @app.route("/api/posts")
 def get_posts():
