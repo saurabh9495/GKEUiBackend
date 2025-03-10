@@ -4,10 +4,10 @@
     <title>Sample UI</title>
     <script>
         function callAPI() {
-            fetch('/api/data')
+            fetch('http://backend-service:5000/api/data') // Direct cluster service call
                 .then(response => response.json())
                 .then(data => document.getElementById('output').innerText = JSON.stringify(data));
-        }
+        }        
     </script>
 </head>
 <body>
