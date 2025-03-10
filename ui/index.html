@@ -20,7 +20,7 @@
     <script>
         async function fetchData(route, elementId) {
             try {
-                const response = await fetch(`http://10.92.0.27:5000/api/${route}`);
+                const response = await fetch(`http://backend-service/api/${route}`);
                 const data = await response.json();
                 document.getElementById(elementId).innerHTML = JSON.stringify(data, null, 2);
             } catch (error) {
