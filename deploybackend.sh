@@ -20,7 +20,14 @@ docker push $GCR_PATH
 echo "Getting GKE credentials..."
 gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE --project $PROJECT_ID
 
-echo "Restarting Backend deployment..."
+echo "Updating Backend deployment..."
 kubectl set image deployment/backend-deployment backend-container=$GCR_PATH
+
+# Force pod restart to ensure the new image is used
+echo "Restarting Backend deployment..."
+kubectl rollout restart deployment/backend-deployment
+
+# Wait for deployment to complete
+kubectl rollout status deployment/backend-deployment
 
 echo "Deployment completed successfully."
