@@ -1,0 +1,22 @@
+# Ignore Google Cloud SDK
+google-cloud-sdk/
+
+# Ignore Python virtual environments
+venv/
+.env/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore Docker build files
+*.log
+*.pid
+*.tar
+*.swp
+docker-compose.override.yml
+
+# Ignore Kubernetes configs (optional)
+*.kube/
+
+# Ignore Cloud Build logs
