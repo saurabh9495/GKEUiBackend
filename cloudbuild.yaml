@@ -18,9 +18,9 @@ steps:
         "container",
         "clusters",
         "get-credentials",
-        "cluster-2",
+        "sk",
         "--zone",
-        "us-central1-c",
+        "us-west2-a",
         "--project",
         "celi12",
       ]
@@ -42,5 +42,5 @@ steps:
 options:
   logging: CLOUD_LOGGING_ONLY
   env:
-    - "CLOUDSDK_COMPUTE_ZONE=us-central1-c"
-    - "CLOUDSDK_CONTAINER_CLUSTER=cluster-2"
+    - "CLOUDSDK_COMPUTE_ZONE=us-west2-a"
+    - "CLOUDSDK_CONTAINER_CLUSTER=sk"
