@@ -14,20 +14,28 @@ spec:
       labels:
         app: ui
     spec:
+      restartPolicy: Always
       containers:
         - name: ui-container
           image: gcr.io/celi12/ui-image:latest
           ports:
             - containerPort: 80
-        - name: envoy
-          image: envoyproxy/envoy:v1.27.0
-          ports:
-            - containerPort: 15000  # Envoy Admin UI
-            - containerPort: 10000  # Proxy Port
-          volumeMounts:
-            - name: envoy-config
-              mountPath: /etc/envoy
-      volumes:
-        - name: envoy-config
-          configMap:
-            name: envoy-config-ui
+      #     resources:
+      #       limits:
+      #         cpu: "500m"
+      #         memory: "512Mi"
+      #       requests:
+      #         cpu: "250m"
+      #         memory: "256Mi"
+      #   - name: envoy
+      #     image: envoyproxy/envoy:v1.27.0
+      #     ports:
+      #       - containerPort: 15000  # Envoy Admin UI
+      #       - containerPort: 10000  # Proxy Port
+      #     volumeMounts:
+      #       - name: envoy-config
+      #         mountPath: /etc/envoy
+      # volumes:
+      #   - name: envoy-config
+      #     configMap:
+      #       name: envoy-config-ui

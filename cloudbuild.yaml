@@ -1,63 +1,46 @@
 steps:
   # Build Docker images
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/celi12/ui-image:latest', './ui']
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/celi12/backend-image:latest', './backend']
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "gcr.io/celi12/ui-image:latest", "./ui"]
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "gcr.io/celi12/backend-image:latest", "./backend"]
 
   # Push images to Google Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/celi12/ui-image:latest']
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/celi12/backend-image:latest']
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/celi12/ui-image:latest"]
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/celi12/backend-image:latest"]
 
   # Authenticate and set the Kubernetes cluster
-  - name: 'gcr.io/cloud-builders/gcloud'
-    args: [
-      'container', 'clusters', 'get-credentials', 'cluster-1',
-      '--zone', 'us-central1-c', # Change to your cluster's zone
-      '--project', 'celi12'
-    ]
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      [
+        "container",
+        "clusters",
+        "get-credentials",
+        "cluster-2",
+        "--zone",
+        "us-central1-c",
+        "--project",
+        "celi12",
+      ]
 
-  # Deploy ConfigMaps for Envoy sidecar proxy
-  - name: 'gcr.io/cloud-builders/kubectl'
-    env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
-    args: ['apply', '-f', './backend/envoy-config-backend.yaml']
-
-  - name: 'gcr.io/cloud-builders/kubectl'
-    env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
-    args: ['apply', '-f', './ui/envoy-config-ui.yaml']
-
-  # Deploy backend with Envoy sidecar
-  - name: 'gcr.io/cloud-builders/kubectl'
-    env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
-    args: ['apply', '-f', './backend/backend-deployment.yaml']
-
-  # Deploy UI with Envoy sidecar
-  - name: 'gcr.io/cloud-builders/kubectl'
-    env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
-    args: ['apply', '-f', './ui/ui-deployment.yaml']
-
-  # Deploy backend and UI services
-  - name: 'gcr.io/cloud-builders/kubectl'
-    env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
-    args: ['apply', '-f', './backend/backend-service.yaml']
-
-  - name: 'gcr.io/cloud-builders/kubectl'
-    env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-1'
-    args: ['apply', '-f', './ui/ui-service.yaml']
+  # Apply Kubernetes manifests (ConfigMaps, Deployments, Services)
+  # - name: "gcr.io/cloud-builders/kubectl"
+  #   args: ["apply", "-f", "./backend/envoy-config-backend.yaml"]
+  # - name: "gcr.io/cloud-builders/kubectl"
+  #   args: ["apply", "-f", "./ui/envoy-config-ui.yaml"]
+  - name: "gcr.io/cloud-builders/kubectl"
+    args: ["apply", "-f", "./backend/backend-deployment.yaml"]
+  - name: "gcr.io/cloud-builders/kubectl"
+    args: ["apply", "-f", "./ui/ui-deployment.yaml"]
+  - name: "gcr.io/cloud-builders/kubectl"
+    args: ["apply", "-f", "./backend/backend-service.yaml"]
+  - name: "gcr.io/cloud-builders/kubectl"
+    args: ["apply", "-f", "./ui/ui-service.yaml"]
 
 options:
   logging: CLOUD_LOGGING_ONLY
+  env:
+    - "CLOUDSDK_COMPUTE_ZONE=us-central1-c"
+    - "CLOUDSDK_CONTAINER_CLUSTER=cluster-2"

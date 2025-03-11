@@ -46,14 +46,12 @@ data:
                               }
                               local json = require("cjson")
                               request_handle:log(json.encode(request_info))
-                            end
                       - name: envoy.filters.http.router
     clusters:
       - name: ui_service
         connect_timeout: 5s
         type: LOGICAL_DNS
         load_assignment:
-          cluster_name: ui_service
           endpoints:
             - lb_endpoints:
                 - endpoint:

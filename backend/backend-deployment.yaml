@@ -14,20 +14,28 @@ spec:
       labels:
         app: backend
     spec:
+      restartPolicy: Always
       containers:
         - name: backend-container
           image: gcr.io/celi12/backend-image:latest
           ports:
             - containerPort: 5000
-        - name: envoy
-          image: envoyproxy/envoy:v1.27.0
-          ports:
-            - containerPort: 15000  # Envoy Admin UI
-            - containerPort: 10000  # Proxy Port
-          volumeMounts:
-            - name: envoy-config
-              mountPath: /etc/envoy
-      volumes:
-        - name: envoy-config
-          configMap:
-            name: envoy-config-backend
+      #     resources:
+      #       limits:
+      #         cpu: "500m"
+      #         memory: "512Mi"
+      #       requests:
+      #         cpu: "250m"
+      #         memory: "256Mi"
+      #   - name: envoy
+      #     image: envoyproxy/envoy:v1.27.0
+      #     ports:
+      #       - containerPort: 15000  # Envoy Admin UI
+      #       - containerPort: 10000  # Proxy Port
+      #     volumeMounts:
+      #       - name: envoy-config
+      #         mountPath: /etc/envoy
+      # volumes:
+      #   - name: envoy-config
+      #     configMap:
+      #       name: envoy-config-backend
