@@ -4,8 +4,8 @@
 PROJECT_ID=celi12
 IMAGE_NAME=backend-image
 GCR_PATH=gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
-CLUSTER_NAME=sk
-ZONE=us-west2-a
+CLUSTER_NAME=cluster-1
+ZONE=us-central1-a
 
 # Authenticate with GCP
 echo "Authenticating with GCP..."

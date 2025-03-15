@@ -1,9 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ui-deployment
-  labels:
-    app: ui
+  name: ui
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -14,28 +13,28 @@ spec:
       labels:
         app: ui
     spec:
-      restartPolicy: Always
       containers:
-        - name: ui-container
+        - name: ui
           image: gcr.io/celi12/ui-image:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
-      #     resources:
-      #       limits:
-      #         cpu: "500m"
-      #         memory: "512Mi"
-      #       requests:
-      #         cpu: "250m"
-      #         memory: "256Mi"
-      #   - name: envoy
-      #     image: envoyproxy/envoy:v1.27.0
-      #     ports:
-      #       - containerPort: 15000  # Envoy Admin UI
-      #       - containerPort: 10000  # Proxy Port
-      #     volumeMounts:
-      #       - name: envoy-config
-      #         mountPath: /etc/envoy
-      # volumes:
-      #   - name: envoy-config
-      #     configMap:
-      #       name: envoy-config-ui
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          # resources:
+          #   requests:
+          #     cpu: "100m"
+          #     memory: "128Mi"
+          #   limits:
+          #     cpu: "250m"
+          #     memory: "256Mi"

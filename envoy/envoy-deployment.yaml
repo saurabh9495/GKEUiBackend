@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: envoy
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: envoy
+  template:
+    metadata:
+      labels:
+        app: envoy
+    spec:
+      containers:
+        - name: envoy
+          image: envoyproxy/envoy:v1.27.0
+          command: ["/usr/local/bin/envoy"]
+          args: ["-c", "/etc/envoy/envoy.yaml", "--log-level", "info"]
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: envoy-config
+              mountPath: /etc/envoy
+              readOnly: true
+            - name: tap-logs
+              mountPath: /tmp/envoy_tap_logs
+          # resources:
+          #   limits:
+          #     cpu: "500m"
+          #     memory: "256Mi"
+          #   requests:
+          #     cpu: "250m"
+          #     memory: "128Mi"
+      volumes:
+        - name: envoy-config
+          configMap:
+            name: envoy-config
+        - name: tap-logs
+          emptyDir: {}

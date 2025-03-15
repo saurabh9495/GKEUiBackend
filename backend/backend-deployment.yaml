@@ -1,9 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend-deployment
-  labels:
-    app: backend
+  name: backend
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -14,28 +13,28 @@ spec:
       labels:
         app: backend
     spec:
-      restartPolicy: Always
       containers:
-        - name: backend-container
+        - name: backend
           image: gcr.io/celi12/backend-image:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
-      #     resources:
-      #       limits:
-      #         cpu: "500m"
-      #         memory: "512Mi"
-      #       requests:
-      #         cpu: "250m"
-      #         memory: "256Mi"
-      #   - name: envoy
-      #     image: envoyproxy/envoy:v1.27.0
-      #     ports:
-      #       - containerPort: 15000  # Envoy Admin UI
-      #       - containerPort: 10000  # Proxy Port
-      #     volumeMounts:
-      #       - name: envoy-config
-      #         mountPath: /etc/envoy
-      # volumes:
-      #   - name: envoy-config
-      #     configMap:
-      #       name: envoy-config-backend
+          readinessProbe:
+            httpGet:
+              path: /api/home
+              port: 5000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/home
+              port: 5000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          # resources:
+          #   requests:
+          #     cpu: "100m"
+          #     memory: "128Mi"
+          #   limits:
+          #     cpu: "250m"
+          #     memory: "256Mi"

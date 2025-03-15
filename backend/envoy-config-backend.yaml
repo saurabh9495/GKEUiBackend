@@ -35,12 +35,20 @@ data:
                               local headers = request_handle:headers()
                               headers:replace("Authorization", "[REDACTED]")
                               headers:replace("password", "[REDACTED]")
+                            end
+
+                            function envoy_on_response(response_handle)
+                              local headers = response_handle:headers()
+                              local status = headers:get(":status")
+                              response_handle:logInfo("Response Status: " .. tostring(status))
+                            end
                       - name: envoy.filters.http.router
     clusters:
       - name: backend_service
         connect_timeout: 5s
         type: LOGICAL_DNS
         load_assignment:
+          cluster_name: backend_service
           endpoints:
             - lb_endpoints:
                 - endpoint:
