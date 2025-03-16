@@ -1,0 +1,26 @@
+                    http_filters:
+                      - name: envoy.filters.http.lua
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+                          inline_code: |
+                            function envoy_on_request(request_handle)
+                              local headers = request_handle:headers()
+                              local body = request_handle:body():getBytes(0, request_handle:body():length()) or ""
+
+                              request_handle:logInfo("{\"type\":\"request\",\"method\":\"" .. headers:get(":method") .. "\",\"path\":\"" .. headers:get(":path") .. "\",\"body\":\"" .. body .. "\"}")
+                            end
+
+                            function envoy_on_response(response_handle)
+                              local headers = response_handle:headers()
+                              local body = response_handle:body():getBytes(0, response_handle:body():length()) or ""
+
+                              response_handle:logInfo("{\"type\":\"response\",\"status\":\"" .. headers:get(":status") .. "\",\"body\":\"" .. body .. "\"}")
+                            end
+                      - name: envoy.filters.http.router
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+                    access_log:
+                      - name: envoy.access_loggers.stdout
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog

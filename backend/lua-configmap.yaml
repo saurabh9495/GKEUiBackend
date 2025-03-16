@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lua-scripts
+data:
+  logging.lua: |
+    function envoy_on_request(request_handle)
+      local headers = request_handle:headers()
+      local body = request_handle:body():getBytes(0, request_handle:body():length()) or ""
+      
+      request_handle:logInfo("{\"type\":\"request\",\"method\":\"" .. headers:get(":method") .. "\",\"path\":\"" .. headers:get(":path") .. "\",\"body\":\"" .. body .. "\"}")
+    end
+
+    function envoy_on_response(response_handle)
+      local headers = response_handle:headers()
+      local body = response_handle:body():getBytes(0, response_handle:body():length()) or ""
+
+      response_handle:logInfo("{\"type\":\"response\",\"status\":\"" .. headers:get(":status") .. "\",\"body\":\"" .. body .. "\"}")
+    end

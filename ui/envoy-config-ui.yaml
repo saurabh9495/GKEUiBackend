@@ -4,6 +4,12 @@ metadata:
   name: envoy-config-ui
 data:
   envoy.yaml: |
+    admin:
+      access_log_path: "/dev/null"
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 9901
     static_resources:
       listeners:
         - name: ui_listener
@@ -30,21 +36,31 @@ data:
                         typed_config:
                           "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
                           inline_code: |
+                            local json = require("cjson")
                             function envoy_on_request(request_handle)
                               local headers = request_handle:headers()
-                              headers:replace("Authorization", "[REDACTED]")
-                              headers:replace("password", "[REDACTED]")
+                              local body = request_handle:body():getBytes(0, request_handle:body():length()) or ""
+                              local log_data = json.encode({
+                                type = "request",
+                                method = headers:get(":method"),
+                                path = headers:get(":path"),
+                                headers = headers:asTable(),
+                                body = body
+                              })
+                              request_handle:log(log_data)
+                            end
 
                             function envoy_on_response(response_handle)
                               local headers = response_handle:headers()
-                              local status = headers:get(":status")
-                              local request_info = {
-                                method = request_handle:headers():get(":method"),
-                                path = request_handle:headers():get(":path"),
-                                status = status
-                              }
-                              local json = require("cjson")
-                              request_handle:log(json.encode(request_info))
+                              local body = response_handle:body():getBytes(0, response_handle:body():length()) or ""
+                              local log_data = json.encode({
+                                type = "response",
+                                status = headers:get(":status"),
+                                headers = headers:asTable(),
+                                body = body
+                              })
+                              response_handle:log(log_data)
+                            end
                       - name: envoy.filters.http.router
       clusters:
         - name: ui_service
@@ -56,4 +72,6 @@ data:
               - lb_endpoints:
                   - endpoint:
                       address:
-                        socket_address: { address: ui-service, port_value: 80 }
+                        socket_address:
+                          address: ui-service
+                          port_value: 80

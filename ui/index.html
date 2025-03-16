@@ -27,7 +27,7 @@
     <script>
         async function fetchData(route, elementId) {
             try {
-                const response = await fetch(`http://34.41.2.138/api/${route}`);
+                const response = await fetch(`http://34.56.20.188//api/${route}`);
                 const data = await response.json();
                 document.getElementById(elementId).innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
             } catch (error) {

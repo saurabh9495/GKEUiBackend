@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: envoy-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: envoy-backend
+  template:
+    metadata:
+      labels:
+        app: envoy-backend
+    spec:
+      containers:
+        - name: envoy
+          image: envoyproxy/envoy:v1.29.0
+          ports:
+            - containerPort: 10000
+          volumeMounts:
+            - name: envoy-config
+              mountPath: /etc/envoy # Correct way to mount a ConfigMap file
+      volumes:
+        - name: envoy-config
+          configMap:
+            name: envoy-config-backend

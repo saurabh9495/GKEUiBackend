@@ -28,10 +28,6 @@ steps:
   # Apply Kubernetes manifests
   - name: "gcr.io/cloud-builders/kubectl"
     entrypoint: "kubectl"
-    args: ["apply", "-f", "./envoy/envoy-config.yaml"]
-
-  - name: "gcr.io/cloud-builders/kubectl"
-    entrypoint: "kubectl"
     args: ["apply", "-f", "./backend/backend-deployment.yaml"]
 
   - name: "gcr.io/cloud-builders/kubectl"
@@ -46,13 +42,31 @@ steps:
     entrypoint: "kubectl"
     args: ["apply", "-f", "./ui/ui-service.yaml"]
 
+  # Apply backend Envoy configuration and deployment
   - name: "gcr.io/cloud-builders/kubectl"
     entrypoint: "kubectl"
-    args: ["apply", "-f", "./envoy/envoy-deployment.yaml"]
+    args: ["apply", "-f", "./backend/envoy-config-backend.yaml"]
 
   - name: "gcr.io/cloud-builders/kubectl"
     entrypoint: "kubectl"
-    args: ["apply", "-f", "./envoy/envoy-service.yaml"]
+    args: ["apply", "-f", "./backend/envoy-backend-deployment.yaml"]
+
+  - name: "gcr.io/cloud-builders/kubectl"
+    entrypoint: "kubectl"
+    args: ["apply", "-f", "./backend/envoy-backend-service.yaml"]
+
+  # Apply UI Envoy configuration and deployment
+  - name: "gcr.io/cloud-builders/kubectl"
+    entrypoint: "kubectl"
+    args: ["apply", "-f", "./ui/envoy-config-ui.yaml"]
+
+  - name: "gcr.io/cloud-builders/kubectl"
+    entrypoint: "kubectl"
+    args: ["apply", "-f", "./ui/envoy-ui-deployment.yaml"]
+
+  - name: "gcr.io/cloud-builders/kubectl"
+    entrypoint: "kubectl"
+    args: ["apply", "-f", "./ui/envoy-ui-service.yaml"]
 
 options:
   logging: CLOUD_LOGGING_ONLY
