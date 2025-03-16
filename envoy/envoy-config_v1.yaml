@@ -26,26 +26,10 @@ data:
                     "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
                     codec_type: AUTO
                     stat_prefix: ingress_http
-                    access_log:
-                      - name: envoy.access_loggers.file
-                        typed_config:
-                          "@type": type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog
-                          path: "/tmp/envoy/access.log"
-                          log_format:
-                            json_format:
-                              start_time: "%START_TIME%"
-                              method: "%REQ(:METHOD)%"
-                              path: "%REQ(:PATH)%"
-                              protocol: "%PROTOCOL%"
-                              response_code: "%RESPONSE_CODE%"
-                              response_flags: "%RESPONSE_FLAGS%"
-                              upstream_host: "%UPSTREAM_HOST%"
-                              request_headers: "%REQ(X-REQUEST-ID)%"
-                              response_headers: "%RESP(content-type)%"
                     route_config:
                       virtual_hosts:
                         - name: default_services
-                          domains: ["*"]
+                          domains: ["*"]  # Use a single wildcard domain
                           routes:
                             - match: { prefix: "/api" }
                               route: { cluster: backend }
@@ -63,7 +47,7 @@ data:
                                 sinks:
                                   - format: JSON_BODY_AS_BYTES
                                     file_per_tap:
-                                      path_prefix: "/tmp/envoy/tap"
+                                      path_prefix: "/tmp/envoy_tap_logs"
                       - name: envoy.filters.http.router
                         typed_config:
                           "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router

@@ -25,7 +25,9 @@ spec:
               mountPath: /etc/envoy
               readOnly: true
             - name: tap-logs
-              mountPath: /tmp/envoy_tap_logs
+              mountPath: /tmp/envoy
+          securityContext:
+            runAsUser: 0
           # resources:
           #   limits:
           #     cpu: "500m"
@@ -39,3 +41,5 @@ spec:
             name: envoy-config
         - name: tap-logs
           emptyDir: {}
+
+
