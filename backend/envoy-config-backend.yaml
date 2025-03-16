@@ -53,9 +53,9 @@ data:
                                     body = body
                                 }
 
-                                -- Capture all request headers
-                                for key, value in pairs(headers) do
-                                    request_info.headers[key] = value
+                                -- Iterate over headers and explicitly retrieve each value as a string.
+                                for key, _ in pairs(headers) do
+                                    request_info.headers[key] = headers:get(key)
                                 end
 
                                 request_handle:logInfo(cjson.encode(request_info))
@@ -81,9 +81,9 @@ data:
                                     body = body
                                 }
 
-                                -- Capture all response headers
-                                for key, value in pairs(headers) do
-                                    response_info.headers[key] = value
+                                -- Iterate over response headers using get() to copy plain strings.
+                                for key, _ in pairs(headers) do
+                                    response_info.headers[key] = headers:get(key)
                                 end
 
                                 response_handle:logInfo(cjson.encode(response_info))
@@ -104,5 +104,5 @@ data:
                   - endpoint:
                       address:
                         socket_address:
-                          address: backend-service
-                          port_value: 80
+                          address: backend-app-service  # Updated to point to the backend application service
+                          port_value: 80              # Matches the service port defined in backend-app-service.yaml

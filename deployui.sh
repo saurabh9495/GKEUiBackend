@@ -21,7 +21,7 @@ echo "Getting GKE credentials..."
 gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE --project $PROJECT_ID
 
 echo "Updating UI deployment with the new image..."
-kubectl set image deployment/ui ui-container=$GCR_PATH
+kubectl set image deployment/ui ui=$GCR_PATH
 
 # Ensure pods restart to use the latest image
 echo "Restarting UI deployment..."
