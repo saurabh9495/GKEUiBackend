@@ -14,14 +14,13 @@ spec:
     spec:
       containers:
         - name: envoy
-          image: envoyproxy/envoy:v1.29.0
+          image: gcr.io/celi12/envoy-image:latest
           ports:
             - containerPort: 10000
           volumeMounts:
-            - name: config-volume
+            - name: envoy-config
               mountPath: /etc/envoy
-              readOnly: true
       volumes:
-        - name: config-volume
+        - name: envoy-config
           configMap:
             name: envoy-config-ui

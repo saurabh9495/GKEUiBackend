@@ -36,32 +36,63 @@ data:
                         typed_config:
                           "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
                           inline_code: |
-                            local json = require("cjson")
+                            local cjson = require "cjson"
+                            
                             function envoy_on_request(request_handle)
-                              local headers = request_handle:headers()
-                              local body = request_handle:body():getBytes(0, request_handle:body():length()) or ""
-                              local log_data = json.encode({
-                                type = "request",
-                                method = headers:get(":method"),
-                                path = headers:get(":path"),
-                                headers = headers:asTable(),
-                                body = body
-                              })
-                              request_handle:log(log_data)
+                                local headers = request_handle:headers()
+                                local body = ""
+                                
+                                local body_handle = request_handle:body()
+                                if body_handle then
+                                    local length = body_handle:length()
+                                    if length and length > 0 then
+                                        body = body_handle:getBytes(0, length) or ""
+                                    end
+                                end
+                                
+                                local request_info = {
+                                    type = "request",
+                                    method = headers:get(":method") or "UNKNOWN",
+                                    path = headers:get(":path") or "UNKNOWN",
+                                    headers = {},
+                                    body = body
+                                }
+                                
+                                for key, value in pairs(headers) do
+                                    request_info.headers[key] = value
+                                end
+                                
+                                request_handle:logInfo(cjson.encode(request_info))
                             end
-
+                            
                             function envoy_on_response(response_handle)
-                              local headers = response_handle:headers()
-                              local body = response_handle:body():getBytes(0, response_handle:body():length()) or ""
-                              local log_data = json.encode({
-                                type = "response",
-                                status = headers:get(":status"),
-                                headers = headers:asTable(),
-                                body = body
-                              })
-                              response_handle:log(log_data)
+                                local headers = response_handle:headers()
+                                local body = ""
+                                
+                                local body_handle = response_handle:body()
+                                if body_handle then
+                                    local length = body_handle:length()
+                                    if length and length > 0 then
+                                        body = body_handle:getBytes(0, length) or ""
+                                    end
+                                end
+                                
+                                local response_info = {
+                                    type = "response",
+                                    status = headers:get(":status") or "UNKNOWN",
+                                    headers = {},
+                                    body = body
+                                }
+                                
+                                for key, value in pairs(headers) do
+                                    response_info.headers[key] = value
+                                end
+                                
+                                response_handle:logInfo(cjson.encode(response_info))
                             end
                       - name: envoy.filters.http.router
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
       clusters:
         - name: ui_service
           connect_timeout: 5s

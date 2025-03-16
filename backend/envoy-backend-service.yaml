@@ -7,6 +7,6 @@ spec:
     app: envoy-backend
   ports:
     - protocol: TCP
-      port: 80   # Change to 80
+      port: 80
       targetPort: 10000
   type: LoadBalancer
