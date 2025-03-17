@@ -2,7 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
-  namespace: default
+  labels:
+    app: backend
 spec:
   replicas: 1
   selector:
@@ -13,10 +14,18 @@ spec:
       labels:
         app: backend
     spec:
+      initContainers:
+        - name: init-iptables
+          image: gcr.io/celi12/iptables-setup:latest
+          securityContext:
+            privileged: true
+            capabilities:
+              add:
+                - NET_ADMIN
+          command: ["sh", "-c", "iptables -t nat -A OUTPUT -p tcp --dport 80 -j REDIRECT --to-port 10000"]
       containers:
         - name: backend
           image: gcr.io/celi12/backend-image:latest
-          imagePullPolicy: Always
           ports:
             - containerPort: 5000
           readinessProbe:
@@ -31,10 +40,14 @@ spec:
               port: 5000
             initialDelaySeconds: 3
             periodSeconds: 10
-          # resources:
-          #   requests:
-          #     cpu: "100m"
-          #     memory: "128Mi"
-          #   limits:
-          #     cpu: "250m"
-          #     memory: "256Mi"
+        - name: envoy-sidecar
+          image: gcr.io/celi12/envoy-image:latest
+          ports:
+            - containerPort: 10000
+          volumeMounts:
+            - name: envoy-config
+              mountPath: /etc/envoy
+      volumes:
+        - name: envoy-config
+          configMap:
+            name: envoy-config-backend

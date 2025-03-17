@@ -6,7 +6,7 @@ data:
   envoy.yaml: |
     static_resources:
       listeners:
-        - name: backend_listener
+        - name: egress_listener
           address:
             socket_address:
               address: 0.0.0.0
@@ -16,11 +16,11 @@ data:
                 - name: envoy.filters.network.http_connection_manager
                   typed_config:
                     "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
-                    stat_prefix: backend
+                    stat_prefix: egress
                     codec_type: AUTO
                     route_config:
                       virtual_hosts:
-                        - name: backend
+                        - name: egress_service
                           domains: ["*"]
                           routes:
                             - match: { prefix: "/" }
@@ -30,69 +30,15 @@ data:
                         typed_config:
                           "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
                           inline_code: |
-                            local cjson = require "cjson"
-
                             function envoy_on_request(request_handle)
-                                local headers = request_handle:headers()
-                                local body = ""
-
-                                -- Safely fetch request body
-                                local body_handle = request_handle:body()
-                                if body_handle then
-                                    local length = body_handle:length()
-                                    if length and length > 0 then
-                                        body = body_handle:getBytes(0, length) or ""
-                                    end
-                                end
-
-                                local request_info = {
-                                    type = "request",
-                                    method = headers:get(":method") or "UNKNOWN",
-                                    path = headers:get(":path") or "UNKNOWN",
-                                    headers = {},
-                                    body = body
-                                }
-
-                                -- Iterate over headers and explicitly retrieve each value as a string.
-                                for key, _ in pairs(headers) do
-                                    request_info.headers[key] = headers:get(key)
-                                end
-
-                                request_handle:logInfo(cjson.encode(request_info))
+                              -- Log the request method and path
+                              local method = request_handle:headers():get(":method")
+                              local path = request_handle:headers():get(":path")
+                              request_handle:logInfo("Outbound request - Method: " .. tostring(method) .. ", Path: " .. tostring(path))
                             end
-
-                            function envoy_on_response(response_handle)
-                                local headers = response_handle:headers()
-                                local body = ""
-
-                                -- Safely fetch response body
-                                local body_handle = response_handle:body()
-                                if body_handle then
-                                    local length = body_handle:length()
-                                    if length and length > 0 then
-                                        body = body_handle:getBytes(0, length) or ""
-                                    end
-                                end
-
-                                local response_info = {
-                                    type = "response",
-                                    status = headers:get(":status") or "UNKNOWN",
-                                    headers = {},
-                                    body = body
-                                }
-
-                                -- Iterate over response headers using get() to copy plain strings.
-                                for key, _ in pairs(headers) do
-                                    response_info.headers[key] = headers:get(key)
-                                end
-
-                                response_handle:logInfo(cjson.encode(response_info))
-                            end
-
                       - name: envoy.filters.http.router
                         typed_config:
                           "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
-
       clusters:
         - name: backend_service
           connect_timeout: 5s
@@ -104,5 +50,11 @@ data:
                   - endpoint:
                       address:
                         socket_address:
-                          address: backend-app-service  # Updated to point to the backend application service
-                          port_value: 80              # Matches the service port defined in backend-app-service.yaml
+                          address: localhost
+                          port_value: 5000
+    admin:
+      access_log_path: "/tmp/admin_access.log"
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 9901

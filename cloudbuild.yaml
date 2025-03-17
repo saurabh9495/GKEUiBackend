@@ -36,7 +36,7 @@ steps:
 
   - name: "gcr.io/cloud-builders/kubectl"
     entrypoint: "kubectl"
-    args: ["apply", "-f", "./backend/backend-app-service.yaml"]
+    args: ["apply", "-f", "./backend/backend-service.yaml"]
 
   - name: "gcr.io/cloud-builders/kubectl"
     entrypoint: "kubectl"
@@ -47,13 +47,13 @@ steps:
     entrypoint: "kubectl"
     args: ["apply", "-f", "./backend/envoy-config-backend.yaml"]
 
-  - name: "gcr.io/cloud-builders/kubectl"
-    entrypoint: "kubectl"
-    args: ["apply", "-f", "./backend/envoy-backend-deployment.yaml"]
+  # - name: "gcr.io/cloud-builders/kubectl"
+  #   entrypoint: "kubectl"
+  #   args: ["apply", "-f", "./backend/envoy-backend-deployment.yaml"]
 
-  - name: "gcr.io/cloud-builders/kubectl"
-    entrypoint: "kubectl"
-    args: ["apply", "-f", "./backend/envoy-backend-service.yaml"]
+  # - name: "gcr.io/cloud-builders/kubectl"
+  #   entrypoint: "kubectl"
+  #   args: ["apply", "-f", "./backend/envoy-backend-service.yaml"]
 
   # Apply UI Envoy configuration and deployment
   - name: "gcr.io/cloud-builders/kubectl"

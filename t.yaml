@@ -6,7 +6,7 @@ data:
   envoy.yaml: |
     static_resources:
       listeners:
-        - name: backend_listener
+        - name: egress_listener
           address:
             socket_address:
               address: 0.0.0.0
@@ -16,83 +16,38 @@ data:
                 - name: envoy.filters.network.http_connection_manager
                   typed_config:
                     "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
-                    stat_prefix: backend
+                    stat_prefix: egress
                     codec_type: AUTO
                     route_config:
                       virtual_hosts:
-                        - name: backend
-                          domains: ["*"]
+                        - name: internal_host
+                          # Match traffic intended for your backend application
+                          domains: ["localhost", "backend-app-service"]
                           routes:
                             - match: { prefix: "/" }
                               route: { cluster: backend_service }
+                        - name: external_api_host
+                          # Match outbound traffic to jsonplaceholder.typicode.com
+                          domains: ["jsonplaceholder.typicode.com"]
+                          routes:
+                            - match: { prefix: "/" }
+                              route: { cluster: external_api }
                     http_filters:
+                      # Lua filter to log outbound request details
                       - name: envoy.filters.http.lua
                         typed_config:
                           "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
                           inline_code: |
-                            local cjson = require "cjson"
-
                             function envoy_on_request(request_handle)
-                                local headers = request_handle:headers()
-                                local body = ""
-
-                                -- Safely fetch request body
-                                local body_handle = request_handle:body()
-                                if body_handle then
-                                    local length = body_handle:length()
-                                    if length and length > 0 then
-                                        body = body_handle:getBytes(0, length) or ""
-                                    end
-                                end
-
-                                local request_info = {
-                                    type = "request",
-                                    method = headers:get(":method") or "UNKNOWN",
-                                    path = headers:get(":path") or "UNKNOWN",
-                                    headers = {},
-                                    body = body
-                                }
-
-                                -- Iterate over headers and explicitly retrieve each value as a string.
-                                for key, _ in pairs(headers) do
-                                    request_info.headers[key] = headers:get(key)
-                                end
-
-                                request_handle:logInfo(cjson.encode(request_info))
+                              local headers = request_handle:headers()
+                              local method = headers:get(":method") or "UNKNOWN"
+                              local host = headers:get("host") or "UNKNOWN"
+                              local path = headers:get(":path") or "UNKNOWN"
+                              request_handle:logInfo("Outbound Request - Method: " .. method .. ", Host: " .. host .. ", Path: " .. path)
                             end
-
-                            function envoy_on_response(response_handle)
-                                local headers = response_handle:headers()
-                                local body = ""
-
-                                -- Safely fetch response body
-                                local body_handle = response_handle:body()
-                                if body_handle then
-                                    local length = body_handle:length()
-                                    if length and length > 0 then
-                                        body = body_handle:getBytes(0, length) or ""
-                                    end
-                                end
-
-                                local response_info = {
-                                    type = "response",
-                                    status = headers:get(":status") or "UNKNOWN",
-                                    headers = {},
-                                    body = body
-                                }
-
-                                -- Iterate over response headers using get() to copy plain strings.
-                                for key, _ in pairs(headers) do
-                                    response_info.headers[key] = headers:get(key)
-                                end
-
-                                response_handle:logInfo(cjson.encode(response_info))
-                            end
-
                       - name: envoy.filters.http.router
                         typed_config:
                           "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
-
       clusters:
         - name: backend_service
           connect_timeout: 5s
@@ -104,5 +59,26 @@ data:
                   - endpoint:
                       address:
                         socket_address:
-                          address: backend-app-service  # Updated to point to the backend application service
-                          port_value: 80              # Matches the service port defined in backend-app-service.yaml
+                          # Since backend and Envoy run in the same pod, use localhost
+                          address: localhost
+                          port_value: 5000
+        - name: external_api
+          connect_timeout: 5s
+          type: STRICT_DNS
+          lb_policy: ROUND_ROBIN
+          transport_socket:
+            name: envoy.transport_sockets.tls
+            typed_config: |
+              {
+                \"@type\": \"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext\",
+                \"common_tls_context\": {}
+              }
+          load_assignment:
+            cluster_name: external_api
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: jsonplaceholder.typicode.com
+                          port_value: 443
