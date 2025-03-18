@@ -22,7 +22,12 @@ spec:
             capabilities:
               add:
                 - NET_ADMIN
-          command: ["sh", "-c", "iptables -t nat -A OUTPUT -p tcp --dport 80 -j REDIRECT --to-port 10000"]
+          command:
+            - sh
+            - -c
+            - |
+              iptables -t nat -A OUTPUT -p tcp --dport 80 -j REDIRECT --to-port 10000 && \
+              iptables -t nat -A OUTPUT -p tcp --dport 443 -j REDIRECT --to-port 10000
       containers:
         - name: backend
           image: gcr.io/celi12/backend-image:latest

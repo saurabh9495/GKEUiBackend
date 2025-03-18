@@ -21,11 +21,11 @@ echo "Getting GKE credentials..."
 gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE --project $PROJECT_ID
 
 echo "Updating Backend deployment with the new image..."
-kubectl set image deployment/backend-deployment backend-container=$GCR_PATH
+kubectl set image deployment/backend backend=$GCR_PATH
 
 # Ensure pods restart to use the latest image
 echo "Restarting Backend deployment..."
-kubectl rollout restart deployment/backend-deployment
-kubectl rollout status deployment/backend-deployment
+kubectl rollout restart deployment/backend
+kubectl rollout status deployment/backend
 
 echo "Backend deployment completed successfully."

@@ -24,34 +24,65 @@ data:
                           domains: ["*"]
                           routes:
                             - match: { prefix: "/" }
-                              route: { cluster: backend_service }
+                              route: 
+                                cluster: dynamic_forward_proxy_cluster
+                                auto_host_rewrite: true
                     http_filters:
                       - name: envoy.filters.http.lua
                         typed_config:
                           "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
                           inline_code: |
                             function envoy_on_request(request_handle)
-                              -- Log the request method and path
-                              local method = request_handle:headers():get(":method")
-                              local path = request_handle:headers():get(":path")
-                              request_handle:logInfo("Outbound request - Method: " .. tostring(method) .. ", Path: " .. tostring(path))
+                              -- Log request method and path
+                              local headers = request_handle:headers()
+                              local method = headers:get(":method")
+                              local path = headers:get(":path")
+                              request_handle:logInfo("Request - Method: " .. tostring(method) .. ", Path: " .. tostring(path))
+                              
+                              -- Log request headers
+                              for key, value in pairs(headers) do
+                                request_handle:logInfo("Request Header: " .. key .. " = " .. value)
+                              end
+                              
+                              -- Log request body
+                              local body = request_handle:body()
+                              if body then
+                                request_handle:logInfo("Request Body: " .. body:getBytes(0, body:length()))
+                              end
                             end
+                            
+                            function envoy_on_response(response_handle)
+                              -- Log response headers
+                              local headers = response_handle:headers()
+                              for key, value in pairs(headers) do
+                                response_handle:logInfo("Response Header: " .. key .. " = " .. value)
+                              end
+                              
+                              -- Log response body
+                              local body = response_handle:body()
+                              if body then
+                                response_handle:logInfo("Response Body: " .. body:getBytes(0, body:length()))
+                              end
+                            end
+                      - name: envoy.filters.http.dynamic_forward_proxy
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.filters.http.dynamic_forward_proxy.v3.FilterConfig
+                          dns_cache_config:
+                            name: dynamic_forward_proxy_cache_config
+                            dns_lookup_family: V4_ONLY
                       - name: envoy.filters.http.router
                         typed_config:
                           "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
       clusters:
-        - name: backend_service
-          connect_timeout: 5s
-          type: LOGICAL_DNS
-          load_assignment:
-            cluster_name: backend_service
-            endpoints:
-              - lb_endpoints:
-                  - endpoint:
-                      address:
-                        socket_address:
-                          address: localhost
-                          port_value: 5000
+        - name: dynamic_forward_proxy_cluster
+          lb_policy: CLUSTER_PROVIDED
+          cluster_type:
+            name: envoy.clusters.dynamic_forward_proxy
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.clusters.dynamic_forward_proxy.v3.ClusterConfig
+              dns_cache_config:
+                name: dynamic_forward_proxy_cache_config
+                dns_lookup_family: V4_ONLY
     admin:
       access_log_path: "/tmp/admin_access.log"
       address:
